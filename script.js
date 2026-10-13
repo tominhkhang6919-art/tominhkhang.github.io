@@ -100,25 +100,45 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.disabled = true;
       submitBtn.innerHTML = "<span>Đang gửi tin nhắn...</span>";
 
-      // Mô phỏng độ trễ khi gửi tin qua mạng (sau 1 giây sẽ hoàn tất)
-      setTimeout(() => {
-        // Hiển thị thông báo thành công
-        showAlert(`Cảm ơn bạn ${name}! Tin nhắn của bạn đã được ghi nhận. Tôi sẽ phản hồi sớm nhất có thể.`, "success");
+      // Gửi email thật tới Formspree bằng Fetch API
+      const formData = new FormData(contactForm);
 
-        // Xóa trắng các ô nhập liệu sau khi gửi thành công
-        contactForm.reset();
+      fetch("https://formspree.io/f/xdeawnkr", {
+        method: "POST",
+        body: formData,
+        headers: {
+          Accept: "application/json"
+        }
+      })
+        .then((response) => {
+          if (response.ok) {
+            showAlert(`Cảm ơn bạn ${name}! Tin nhắn đã được gửi thành công đến tôi.`, "success");
+            contactForm.reset();
+          } else {
+            return response.json().then((data) => {
+              if (data && data.errors) {
+                const errorMsg = data.errors.map((err) => err.message).join(", ");
+                showAlert("Có lỗi: " + errorMsg, "error");
+              } else {
+                showAlert("Không thể gửi tin nhắn lúc này. Vui lòng thử lại sau!", "error");
+              }
+            });
+          }
+        })
+        .catch(() => {
+          showAlert("Lỗi kết nối mạng! Vui lòng thử lại hoặc gửi trực tiếp qua email.", "error");
+        })
+        .finally(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
 
-        // Khôi phục lại trạng thái ban đầu của nút bấm
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
-
-        // Tự động ẩn thông báo sau 6 giây
-        setTimeout(() => {
-          formAlert.style.display = "none";
-          formAlert.className = "form-alert";
-        }, 6000);
-
-      }, 1000);
+          setTimeout(() => {
+            if (formAlert) {
+              formAlert.style.display = "none";
+              formAlert.className = "form-alert";
+            }
+          }, 6000);
+        });
     });
   }
 

@@ -99,27 +99,47 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.disabled = true;
       submitBtn.innerHTML = "<span>Đang gửi tin nhắn...</span>";
 
-      // 6. Mô phỏng gửi dữ liệu qua mạng với độ trễ 1 giây (1000ms)
-      setTimeout(() => {
-        // Thông báo gửi thành công
-        showAlert(`Cảm ơn bạn ${name}! Tin nhắn đã được gửi thành công. Tôi sẽ sớm phản hồi lại bạn qua email.`, "success");
+      // 6. Gửi email thật tới Formspree bằng Fetch API (không bị chuyển hướng trang)
+      const formData = new FormData(contactForm);
 
-        // Xóa sạch dữ liệu vừa nhập trong form
-        contactForm.reset();
-
-        // Mở lại nút gửi
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
-
-        // Tự động ẩn thông báo sau 6 giây
-        setTimeout(() => {
-          if (formAlert) {
-            formAlert.style.display = "none";
-            formAlert.className = "form-alert";
+      fetch("https://formspree.io/f/xdeawnkr", {
+        method: "POST",
+        body: formData,
+        headers: {
+          Accept: "application/json"
+        }
+      })
+        .then((response) => {
+          if (response.ok) {
+            showAlert(`Cảm ơn bạn ${name}! Tin nhắn đã được gửi thành công đến tôi.`, "success");
+            contactForm.reset();
+          } else {
+            return response.json().then((data) => {
+              if (data && data.errors) {
+                const errorMsg = data.errors.map((err) => err.message).join(", ");
+                showAlert("Có lỗi: " + errorMsg, "error");
+              } else {
+                showAlert("Không thể gửi tin nhắn lúc này. Vui lòng thử lại sau!", "error");
+              }
+            });
           }
-        }, 6000);
+        })
+        .catch(() => {
+          showAlert("Lỗi kết nối mạng! Vui lòng thử lại hoặc gửi trực tiếp qua email.", "error");
+        })
+        .finally(() => {
+          // Mở lại nút gửi
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
 
-      }, 1000);
+          // Tự động ẩn thông báo sau 6 giây
+          setTimeout(() => {
+            if (formAlert) {
+              formAlert.style.display = "none";
+              formAlert.className = "form-alert";
+            }
+          }, 6000);
+        });
     });
   }
 
