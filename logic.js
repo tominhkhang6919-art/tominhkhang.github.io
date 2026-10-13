@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
         .then((response) => {
           if (response.ok) {
-            showAlert(`Cảm ơn bạn ${name}! Tin nhắn đã được gửi thành công đến tôi.`, "success");
+            showAlert(`Cảm ơn bạn ${name}! Tin nhắn đã được gửi thành công đến Tô Minh Khang.`, "success");
             contactForm.reset();
           } else {
             return response.json().then((data) => {
